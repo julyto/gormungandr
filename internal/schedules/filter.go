@@ -6,40 +6,37 @@ import (
 	"github.com/CanalTP/gormungandr"
 	"github.com/CanalTP/gormungandr/kraken"
 	"github.com/gin-gonic/gin"
-	uuid "github.com/satori/go.uuid"
-	"github.com/sirupsen/logrus"
 )
 
 func NoRouteHandler(kraken kraken.Kraken, publisher Publisher) gin.HandlerFunc {
 	fn := func(c *gin.Context) {
-		request_id := uuid.NewV4()
-		logger := logrus.WithField("request_id", request_id)
+		request := gormungandr.NewRequest()
+		c.Header("navitia-request-id", request.ID.String())
 		filter, err := gormungandr.ParsePath(c.Param("filter"))
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err})
 			return
 		}
+		if user, ok := gormungandr.GetUser(c); ok {
+			request.User = user
+		}
+		request.Coverage = c.Param("coverage")
 
 		if filter.API == "route_schedules" {
-			request := NewRouteScheduleRequest()
+			request := NewRouteScheduleRequest(request)
 			if err := c.ShouldBindQuery(&request); err != nil {
-				logger.Debugf("%+v\n", err)
+				request.Logger().Debugf("%+v\n", err)
 				c.JSON(http.StatusBadRequest, gin.H{"error": err})
 				return
 			}
-			request.ID = request_id
 			request.ForbiddenUris = append(request.ForbiddenUris, c.QueryArray("forbidden_uris[]")...)
 			request.Filters = append(request.Filters, filter.Filters...)
-			if user, ok := gormungandr.GetUser(c); ok {
-				request.User = user
-			}
 			if len(request.Filters) < 1 {
 				c.JSON(http.StatusNotFound, gin.H{"message": "at least one filter is required"})
 				return
 			}
 
-			request.Coverage = c.Param("coverage")
-			RouteSchedule(c, kraken, &request, publisher, logger)
+			RouteSchedule(c, kraken, &request, publisher)
 		} else {
 			c.JSON(http.StatusNotFound, gin.H{"error": "API not found"})
 			return

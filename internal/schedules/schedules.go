@@ -15,11 +15,10 @@ import (
 	"github.com/gin-contrib/location"
 	"github.com/gin-gonic/gin"
 	"github.com/golang/protobuf/proto"
-	uuid "github.com/satori/go.uuid"
-	"github.com/sirupsen/logrus"
 )
 
 type RouteScheduleRequest struct {
+	gormungandr.Request
 	FromDatetime     time.Time `form:"from_datetime" time_format:"20060102T150405"`
 	ForbiddenUris    []string  //mapping with Binding doesn't work
 	CurrentDatetime  time.Time `form:"_current_datetime" time_format:"20060102T150405"`
@@ -31,13 +30,11 @@ type RouteScheduleRequest struct {
 	ItemsPerSchedule int32     `form:"items_per_schedule"`
 	DataFreshness    string    `form:"data_freshness"`
 	Filters          []string
-	User             gormungandr.User
-	Coverage         string //requested coverage
-	ID               uuid.UUID
 }
 
-func NewRouteScheduleRequest() RouteScheduleRequest {
+func NewRouteScheduleRequest(req gormungandr.Request) RouteScheduleRequest {
 	return RouteScheduleRequest{
+		Request:          req,
 		StartPage:        0,
 		Count:            10,
 		Duration:         86400,
@@ -49,16 +46,16 @@ func NewRouteScheduleRequest() RouteScheduleRequest {
 	}
 }
 
-func RouteSchedule(c *gin.Context, kraken kraken.Kraken, request *RouteScheduleRequest, publisher Publisher, logger *logrus.Entry) {
+func RouteSchedule(c *gin.Context, kraken kraken.Kraken, request *RouteScheduleRequest, publisher Publisher) {
 	pbReq := BuildRequestRouteSchedule(*request)
 	resp, err := kraken.Call(pbReq)
-	logger.Debug("calling kraken")
+	request.Logger().Debug("calling kraken")
 	if err != nil {
-		logger.Errorf("error while calling kraken: %+v\n", err)
+		request.Logger().Errorf("Error while calling kraken: %+v\n", err)
 		c.JSON(http.StatusServiceUnavailable, gin.H{"error": err})
 		return
 	}
-	logger.Debug("building response")
+	request.Logger().Debug("building response")
 	r := serializer.New().NewRouteSchedulesResponse(pbReq, resp)
 	fillPaginationLinks(getUrl(c), r)
 	status := http.StatusOK
@@ -66,16 +63,16 @@ func RouteSchedule(c *gin.Context, kraken kraken.Kraken, request *RouteScheduleR
 		status = r.Error.Code.HTTPCode()
 	}
 	c.JSON(status, r)
-	logger.Debug("handling stats")
+	request.Logger().Debug("handling stats")
 
 	//the original context must not be used in another goroutine, we have to copy it
 	readonlyContext := c.Copy()
 	go func() {
 		err = publisher.PublishRouteSchedule(*request, *r, *readonlyContext)
 		if err != nil {
-			logger.Errorf("stat not sent %+v", err)
+			request.Logger().Errorf("stat not sent %+v", err)
 		} else {
-			logger.Debug("stat sent")
+			request.Logger().Debug("stat sent")
 		}
 	}()
 }
@@ -99,6 +96,7 @@ func BuildRequestRouteSchedule(req RouteScheduleRequest) *pbnavitia.Request {
 			RealtimeLevel:    pbnavitia.RTLevel_BASE_SCHEDULE.Enum(),
 		},
 		XCurrentDatetime: proto.Uint64(uint64(req.CurrentDatetime.Unix())),
+		RequestId:        proto.String(req.ID.String()),
 	}
 	pbReq.NextStopTimes.ForbiddenUri = append(pbReq.NextStopTimes.ForbiddenUri, req.ForbiddenUris...)
 
