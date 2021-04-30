@@ -19,7 +19,9 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Install libzmq3
-        run: apt update && sudo apt install libzmq3-dev
+        run: |
+          sudo apt update
+          sudo apt install libzmq3-dev
 
       - name: Retreive mock kraken
         run: docker pull navitia/mock-kraken:dev
