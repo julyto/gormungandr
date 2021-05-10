@@ -28,7 +28,8 @@ func TestMain(m *testing.M) {
 		log.Fatalf("Could not connect to docker: %s", err)
 	}
 
-	resource, err := pool.Run("postgres", "9.4", []string{"POSTGRESQL_PASSWORD=secret", "POSTGRES_USER=jormun", "POSTGRES_DB=jormun"})
+	resource, err := pool.Run("postgres", "9.4", []string{"POSTGRES_HOST_AUTH_METHOD=trust",
+		"POSTGRESQL_PASSWORD=secret", "POSTGRES_USER=jormun", "POSTGRES_DB=jormun"})
 	if err != nil {
 		log.Fatalf("Could not start resource: %s", err)
 	}
