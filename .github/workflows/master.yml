@@ -21,7 +21,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: install zip dependency
+      - name: install httpie dependency
         run: |
           sudo apt-get update
           sudo apt install -y httpie
