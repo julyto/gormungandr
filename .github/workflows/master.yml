@@ -27,7 +27,7 @@ jobs:
           sudo apt install -y httpie
 
       - name: Install libzmq3
-        run: sudo apt install libzmq3-dev
+        run: sudo apt install -y libzmq3-dev
 
       - name: Build a version
         run: make build
