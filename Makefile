@@ -61,7 +61,7 @@ dockerhub-login: ## Login Docker hub, DOCKERHUB_USER, DOCKERHUB_PWD, must be pro
 push-image-gormungandr-master: ## Push gormungandr-image to dockerhub
 	$(info Push image-gormungandr-master to Dockerhub)
 	docker tag $(PROJECT):$(VERSION) $(DOCKER_HUB):master
-	make push-image-gormungandr-master
+	docker push $(DOCKER_HUB):master
 
 
 # Absolutely awesome: http://marmelab.com/blog/2016/02/29/auto-documented-makefile.html
