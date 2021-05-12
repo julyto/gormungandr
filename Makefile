@@ -63,6 +63,16 @@ push-image-gormungandr-master: ## Push gormungandr-image to dockerhub
 	docker tag $(PROJECT):$(VERSION) $(DOCKER_HUB):master
 	docker push $(DOCKER_HUB):master
 
+.PHONY: push-image-gormungandr-release
+push-image-gormungandr-release: ## Push gormungandr-image to dockerhub
+	$(info Push image-gormungandr-release to Dockerhub)
+	docker tag $(PROJECT):$(VERSION) $(DOCKER_HUB):$(VERSION)
+	docker tag $(PROJECT):$(VERSION) $(DOCKER_HUB):release
+	docker tag $(PROJECT):$(VERSION) $(DOCKER_HUB):latest
+
+	docker push $(DOCKER_HUB):$(VERSION)
+	docker push $(DOCKER_HUB):release
+	docker push $(DOCKER_HUB):latest
 
 # Absolutely awesome: http://marmelab.com/blog/2016/02/29/auto-documented-makefile.html
 .PHONY: help
