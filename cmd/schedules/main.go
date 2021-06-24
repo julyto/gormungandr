@@ -16,8 +16,6 @@ import (
 
 	"database/sql"
 
-	_ "net/http/pprof"
-
 	"github.com/CanalTP/gormungandr"
 	"github.com/CanalTP/gormungandr/auth"
 	"github.com/CanalTP/gormungandr/internal/schedules"
