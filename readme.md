@@ -2,7 +2,6 @@
 
 ## Introduction
 
-Implementation of jormungandr in go as multiple micro services
 Gormungandr is the little brother of [Jormungandr](https://github.com/CanalTP/navitia/tree/dev/source/jormungandr) inside the [navitia](https://github.com/CanalTP/navitia) project.<br>
 It aims to be the front of navitia, like Jormungandr, but with better perfomance. Indeed, Gormungandr is implemented like a micro service in Golang.
 This service is under construction and just **route_schedules** API is implemented.
@@ -79,6 +78,13 @@ Exemple:
 ```
 # local run
 ./schedules --listen localhost:5000 --kraken ipc:///tmp/default_kraken --skip-auth true
+```
+
+With a kraken linked to Gormungandr you can have access to **route_schedules** API
+
+```
+# classic route schedules call
+https://localhost/v1/coverage/coverage_name/stop_areas/stop_areas_name/route_schedules?
 ```
 
 ## With Docker
