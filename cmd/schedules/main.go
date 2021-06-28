@@ -1,13 +1,9 @@
 package main
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
-	"net/url"
 	"os"
 	"os/signal"
 	"runtime"
@@ -19,6 +15,7 @@ import (
 	"github.com/CanalTP/gormungandr"
 	"github.com/CanalTP/gormungandr/auth"
 	"github.com/CanalTP/gormungandr/internal/schedules"
+	"github.com/CanalTP/gormungandr/internal/utils"
 	"github.com/CanalTP/gormungandr/kraken"
 	cache "github.com/patrickmn/go-cache"
 	"github.com/rafaeljesus/rabbus"
@@ -32,12 +29,6 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/pflag"
 )
-
-type Coverage struct {
-	RealtimeProxies []struct{} `json:"realtime_proxies"`
-	ZmqSocket       string     `json:"zmq_socket"`
-	Key             string     `json:"key"`
-}
 
 func setupRouter(config schedules.Config) *gin.Engine {
 	r := gin.New()
@@ -96,38 +87,6 @@ func initLog(jsonLog bool, logLevel string) {
 		logrus.Fatal(err)
 	}
 	logrus.SetLevel(level)
-}
-
-func GetFileWithFS(uri url.URL) ([]*Coverage, error) {
-	//Get all files in directory params
-	fileInfo, err := ioutil.ReadDir(uri.Path)
-	if err != nil {
-		return nil, err
-	}
-
-	coverages := make([]*Coverage, 0)
-	for _, file := range fileInfo {
-		f, err := os.Open(fmt.Sprintf("%s/%s", uri.Path, file.Name()))
-		if err != nil {
-			return nil, err
-		}
-		defer f.Close()
-		var buffer bytes.Buffer
-		if _, err = buffer.ReadFrom(f); err != nil {
-			return nil, err
-		}
-		jsonData, err := ioutil.ReadAll(&buffer)
-		if err != nil {
-			return nil, err
-		}
-		coverage := &Coverage{}
-		err = json.Unmarshal([]byte(jsonData), coverage)
-		if err != nil {
-			return nil, err
-		}
-		coverages = append(coverages, coverage)
-	}
-	return coverages, nil
 }
 
 func main() {
@@ -214,7 +173,7 @@ func main() {
 
 	router := setupRouter(config)
 	if len(config.KrakenFilesUriStr) > 0 {
-		coverages, err := GetFileWithFS(config.KrakenFilesUri)
+		coverages, err := utils.GetFileWithFS(config.KrakenFilesUri)
 		if err != nil {
 			logger.Fatalf("No coverages: %+v", err)
 		}
