@@ -1,5 +1,7 @@
 github.com/Azure/go-ansiterm v0.0.0-20170929234023-d6e3b3328b78/go.mod h1:LmzpDX56iTiv29bbRTIsUNlaFfuhWRQBWjQdVyAevI8=
 github.com/CanalTP/gonavitia v0.0.0-20180817052458-0dcb887a472b h1:Mpw0SxjGmQxqQ4lmfe0ur3zVcnNwS3BPA6vEYBTcAXM=
+github.com/CanalTP/gormungandr v0.1.0 h1:lYfzeKbQy1FWLcIB+Wmhnqs/v7v9dQuPsF+B+wRvMig=
+github.com/CanalTP/gormungandr v0.1.0/go.mod h1:YQt5YxJo8I5mfaunWhST4/lM7jHtve5LAcE7w3my87A=
 github.com/CanalTP/gonavitia v0.0.0-20180817052458-0dcb887a472b/go.mod h1:EM6QhDgcz+0ao87INT88x/V3PxiSo4kxCSKdqD3ooCo=
 github.com/CanalTP/gonavitia v0.0.0-20210706131440-9f82886aa540 h1:eaRSqmf3G/Ut7BnGg1dQDDbUGiGTlALH9w+jfqXRFnE=
 github.com/CanalTP/gonavitia v0.0.0-20210706131440-9f82886aa540/go.mod h1:EM6QhDgcz+0ao87INT88x/V3PxiSo4kxCSKdqD3ooCo=
