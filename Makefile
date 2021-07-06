@@ -1,4 +1,6 @@
-VERSION := $(shell git describe --tag --always --dirty)
+VERSION=$(shell git tag -l --sort=-v:refname| sed 's/v//g'| head -n 1)
+PROJECT='schedules'
+DOCKER_HUB='navitia/'$(PROJECT)
 
 .PHONY: setup
 setup: ## Install all the build and lint dependencies
@@ -44,11 +46,33 @@ install: ## install project and it's dependancies, useful for autocompletion fea
 
 .PHONY: docker
 docker: ## build docker image
-	docker build -t navitia/schedules:$(VERSION) .
+	docker build -t $(PROJECT):$(VERSION) .
 
 .PHONY: version
 version: ## display version of gormungandr
 	@echo $(VERSION)
+
+.PHONY: dockerhub-login
+dockerhub-login: ## Login Docker hub, DOCKERHUB_USER, DOCKERHUB_PWD, must be provided
+	$(info Login Dockerhub)
+	echo ${DOCKERHUB_PWD} | docker login --username ${DOCKERHUB_USER} --password-stdin
+
+.PHONY: push-image-gormungandr-master
+push-image-gormungandr-master: ## Push gormungandr-image to dockerhub
+	$(info Push image-gormungandr-master to Dockerhub)
+	docker tag $(PROJECT):$(VERSION) $(DOCKER_HUB):master
+	docker push $(DOCKER_HUB):master
+
+.PHONY: push-image-gormungandr-release
+push-image-gormungandr-release: ## Push gormungandr-image to dockerhub
+	$(info Push image-gormungandr-release to Dockerhub)
+	docker tag $(PROJECT):$(VERSION) $(DOCKER_HUB):$(VERSION)
+	docker tag $(PROJECT):$(VERSION) $(DOCKER_HUB):release
+	docker tag $(PROJECT):$(VERSION) $(DOCKER_HUB):latest
+
+	docker push $(DOCKER_HUB):$(VERSION)
+	docker push $(DOCKER_HUB):release
+	docker push $(DOCKER_HUB):latest
 
 # Absolutely awesome: http://marmelab.com/blog/2016/02/29/auto-documented-makefile.html
 .PHONY: help

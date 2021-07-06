@@ -1,0 +1,24 @@
+version: "3.2"
+services:
+  forseti:
+    image: navitia/schedules:latest
+    network_mode: "host"
+    environment:
+      - GIN_MODE=release
+      - TZ=Europe/Paris
+
+      # Server expose
+      - SCHEDULES_LISTEN=localhost:5000
+      - SCHEDULES_TIMEOUT=10s
+      - SCHEDULES_LOG_LEVEL=debug
+      # DB
+      - SCHEDULES_CONNECTION_STRING=
+      # Kraken ZMQ
+      - SCHEDULES_KRAKEN=tcp://localhost:30000
+      # Auth
+      - SCHEDULES_SKIP_AUTH=True
+
+    deploy:
+      resources:
+        limits:
+          memory: 1024M
