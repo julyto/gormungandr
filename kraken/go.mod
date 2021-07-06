@@ -1,7 +1,7 @@
 module github.com/CanalTP/gormungandr/kraken
 
 require (
-	github.com/CanalTP/gonavitia v0.0.0-20180817052458-0dcb887a472b
+	github.com/canalTP/gonavitia v0.0.0-20210706131440-9f82886aa540
 	github.com/golang/protobuf v1.3.2
 	github.com/pebbe/zmq4 v1.0.0
 	github.com/pkg/errors v0.8.1

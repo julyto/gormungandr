@@ -46,6 +46,7 @@ func (s *Serializer) NewPtDisplayInfoForVJ(pb *pbnavitia.PtDisplayInfo) *gonavit
 		info.Headsigns = append(info.Headsigns, pb.Headsigns...)
 	}
 	info.Equipments = s.NewEquipments(pb.HasEquipments)
+	info.TripShortName = proto.String(pb.GetTripShortName())
 	return info
 }
 
