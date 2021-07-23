@@ -1,6 +1,7 @@
 package schedules
 
 import (
+	"fmt"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -46,7 +47,8 @@ func NewRouteScheduleRequest(req gormungandr.Request) RouteScheduleRequest {
 	}
 }
 
-func RouteSchedule(c *gin.Context, kraken kraken.Kraken, request *RouteScheduleRequest, publisher Publisher) {
+func RouteSchedule(c *gin.Context, kraken kraken.Kraken, request *RouteScheduleRequest, publisher Publisher,
+	api string) {
 	pbReq := BuildRequestRouteSchedule(*request)
 	resp, err := kraken.Call(pbReq)
 	request.Logger().Debug("calling kraken")
@@ -57,7 +59,7 @@ func RouteSchedule(c *gin.Context, kraken kraken.Kraken, request *RouteScheduleR
 	}
 	request.Logger().Debug("building response")
 	r := serializer.New().NewRouteSchedulesResponse(pbReq, resp)
-	fillPaginationLinks(getUrl(c), r)
+	fillPaginationLinks(getUrl(c), r, api, request.Coverage)
 	status := http.StatusOK
 	if r.Error != nil {
 		status = r.Error.Code.HTTPCode()
@@ -114,12 +116,29 @@ func getUrl(c *gin.Context) *url.URL {
 	return u
 }
 
-func fillPaginationLinks(url *url.URL, response *gonavitia.RouteScheduleResponse) {
+func fillPaginationLinks(url *url.URL, response *gonavitia.RouteScheduleResponse, api, coverage string) {
 	if response == nil || response.Pagination == nil {
 		return
 	}
-	pagination := *response.Pagination
+
 	values := url.Query()
+	values.Del("start_page")
+	url.RawQuery = ""
+	links := []string{"stop_points", "stop_points", "commercial_modes", "vehicle_journeys", "physical_modes",
+		"physical_modes", "commercial_modes", "networks", "addresses", "lines", "routes", "stop_areas"}
+
+	for _, link := range links {
+		url.Path = fmt.Sprintf("%s/%s/%s/{%s.id}/%s", url.Path[:12], coverage, link, link, api)
+		response.Links = append(response.Links, gonavitia.Link{
+			Href:      proto.String(url.String()),
+			Rel:       proto.String(link),
+			Type:      proto.String(link),
+			Templated: proto.Bool(true),
+		})
+	}
+
+	pagination := *response.Pagination
+	values = url.Query()
 	if pagination.StartPage > 0 {
 		values.Set("start_page", strconv.Itoa(int(pagination.StartPage-1)))
 		url.RawQuery = values.Encode()

@@ -39,7 +39,7 @@ func NoRouteHandler(kraken kraken.Kraken, coverageName string, publisher Publish
 				return
 			}
 
-			RouteSchedule(c, kraken, &request, publisher)
+			RouteSchedule(c, kraken, &request, publisher, filter.API)
 		} else {
 			c.JSON(http.StatusNotFound, gin.H{"error": "API not found"})
 			return
