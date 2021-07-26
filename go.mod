@@ -5,7 +5,6 @@ go 1.16
 require (
 	github.com/Azure/go-ansiterm v0.0.0-20170929234023-d6e3b3328b78 // indirect
 	github.com/BurntSushi/toml v0.3.1 // indirect
-	github.com/CanalTP/gonavitia v0.0.0-20180817052458-0dcb887a472b
 	github.com/CanalTP/gonavitia v0.0.0-20210706131440-9f82886aa540
 	github.com/CanalTP/gormungandr/kraken v0.1.0
 	github.com/Microsoft/go-winio v0.4.7 // indirect
