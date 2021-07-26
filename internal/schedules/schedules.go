@@ -124,8 +124,8 @@ func fillPaginationLinks(url *url.URL, response *gonavitia.RouteScheduleResponse
 	values := url.Query()
 	values.Del("start_page")
 	url.RawQuery = ""
-	links := []string{"stop_points", "stop_points", "commercial_modes", "vehicle_journeys", "physical_modes",
-		"physical_modes", "commercial_modes", "networks", "addresses", "lines", "routes", "stop_areas"}
+	links := []string{"stop_points", "commercial_modes", "vehicle_journeys", "physical_modes",
+		"networks", "addresses", "lines", "routes", "stop_areas"}
 
 	for _, link := range links {
 		url.Path = fmt.Sprintf("%s/%s/%s/{%s.id}/%s", url.Path[:12], coverage, link, link, api)
