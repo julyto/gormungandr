@@ -7,8 +7,10 @@ import (
 	"io/ioutil"
 	"net/url"
 	"os"
+	"path/filepath"
 
 	"github.com/CanalTP/gormungandr/internal/coverage"
+	"github.com/sirupsen/logrus"
 )
 
 func GetFileWithFS(uri url.URL) ([]*coverage.Coverage, error) {
@@ -20,25 +22,29 @@ func GetFileWithFS(uri url.URL) ([]*coverage.Coverage, error) {
 
 	coverages := make([]*coverage.Coverage, 0)
 	for _, file := range fileInfo {
-		f, err := os.Open(fmt.Sprintf("%s/%s", uri.Path, file.Name()))
-		if err != nil {
-			return nil, err
+		//filter to read only json files coverage
+		if filepath.Ext(file.Name()) == ".json" {
+			f, err := os.Open(fmt.Sprintf("%s/%s", uri.Path, file.Name()))
+			if err != nil {
+				return nil, err
+			}
+			defer f.Close()
+			logrus.Info("Read file: ", file.Name())
+			var buffer bytes.Buffer
+			if _, err = buffer.ReadFrom(f); err != nil {
+				return nil, err
+			}
+			jsonData, err := ioutil.ReadAll(&buffer)
+			if err != nil {
+				return nil, err
+			}
+			coverage := &coverage.Coverage{}
+			err = json.Unmarshal([]byte(jsonData), coverage)
+			if err != nil {
+				return nil, err
+			}
+			coverages = append(coverages, coverage)
 		}
-		defer f.Close()
-		var buffer bytes.Buffer
-		if _, err = buffer.ReadFrom(f); err != nil {
-			return nil, err
-		}
-		jsonData, err := ioutil.ReadAll(&buffer)
-		if err != nil {
-			return nil, err
-		}
-		coverage := &coverage.Coverage{}
-		err = json.Unmarshal([]byte(jsonData), coverage)
-		if err != nil {
-			return nil, err
-		}
-		coverages = append(coverages, coverage)
 	}
 	return coverages, nil
 }
