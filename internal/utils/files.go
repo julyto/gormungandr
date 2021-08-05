@@ -11,10 +11,12 @@ import (
 
 	"github.com/CanalTP/gormungandr/internal/coverage"
 	"github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 )
 
 func GetFileWithFS(uri url.URL) ([]*coverage.Coverage, error) {
 	//Get all files in directory params
+	log.Info("Mapping coverage-kraken, Read files from path :", uri.Path)
 	fileInfo, err := ioutil.ReadDir(uri.Path)
 	if err != nil {
 		return nil, err
@@ -24,6 +26,7 @@ func GetFileWithFS(uri url.URL) ([]*coverage.Coverage, error) {
 	for _, file := range fileInfo {
 		//filter to read only json files coverage
 		if filepath.Ext(file.Name()) == ".json" {
+			log.Info("Mapping coverage-kraken, Read file :", file.Name())
 			f, err := os.Open(fmt.Sprintf("%s/%s", uri.Path, file.Name()))
 			if err != nil {
 				return nil, err
