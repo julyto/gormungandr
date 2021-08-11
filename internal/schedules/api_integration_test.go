@@ -144,8 +144,8 @@ func TestRouteSchedulesHeadsign(t *testing.T) {
 	require.NotNil(schedule.Table.Headers[0].DisplayInfo)
 	displayInfo := schedule.Table.Headers[0].DisplayInfo
 	require.NotNil(displayInfo.Headsign)
-	assert.Equal("vjA", *displayInfo.Headsign)
-	assert.ElementsMatch([]string{"A00", "vjA"}, displayInfo.Headsigns)
+	assert.Equal("vjA_hs", *displayInfo.Headsign)
+	assert.ElementsMatch([]string{"A00", "vjA_hs"}, displayInfo.Headsigns)
 }
 
 func TestRouteSchedulesDisruptions(t *testing.T) {
@@ -212,6 +212,6 @@ func TestMultiCoverage(t *testing.T) {
 	require.NotNil(schedule.Table.Headers[0].DisplayInfo)
 	displayInfo := schedule.Table.Headers[0].DisplayInfo
 	require.NotNil(displayInfo.Headsign)
-	assert.Equal("vjA", *displayInfo.Headsign)
-	assert.ElementsMatch([]string{"A00", "vjA"}, displayInfo.Headsigns)
+	assert.Equal("vjA_hs", *displayInfo.Headsign)
+	assert.ElementsMatch([]string{"A00", "vjA_hs"}, displayInfo.Headsigns)
 }
