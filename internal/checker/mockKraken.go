@@ -61,7 +61,7 @@ func (m *MockManager) MainRoutingTest() (kraken.Kraken, error) {
 func (m *MockManager) startKraken(binary string) (kraken.Kraken, error) {
 	if !m.Pulled {
 		if err := m.pool.Client.PullImage(docker.PullImageOptions{
-			Repository:   "navitia/mock-kraken:navitia_builder",
+			Repository:   "navitia/mock-kraken",
 			Tag:          getTag(),
 			OutputStream: os.Stdout,
 		}, docker.AuthConfiguration{}); err != nil {
@@ -69,14 +69,15 @@ func (m *MockManager) startKraken(binary string) (kraken.Kraken, error) {
 		}
 		m.Pulled = true
 	}
-
 	options := dockertest.RunOptions{
-		Repository: "navitia/mock-kraken:navitia_builder",
+
+		Repository: "navitia/mock-kraken",
 		Tag:        getTag(),
 		Env:        []string{"KRAKEN_GENERAL_log_level=DEBUG"},
 		Cmd:        []string{fmt.Sprint("./", binary), "--GENERAL.zmq_socket", "tcp://*:30000"},
 	}
 	resource, err := m.pool.RunWithOptions(&options)
+
 	m.resources = append(m.resources, resource)
 	if err != nil {
 		return nil, err
