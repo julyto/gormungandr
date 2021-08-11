@@ -24,7 +24,7 @@ jobs:
           sudo apt install libzmq3-dev
 
       - name: Retreive mock kraken
-        run: docker pull navitia/mock-kraken:dev
+        run: docker pull navitia/mock-kraken:navitia_builder
 
       - name: Prepare Env
         run: export GO111MODULE=on
