@@ -27,7 +27,7 @@ jobs:
         run: export GORMUNGANDR_DOCKERTEST_TAG=navitia_builder
 
       - name: Retreive mock kraken
-        run: docker pull navitia/mock-kraken:$GORMUNGANDR_DOCKERTEST_TAG
+        run: docker pull navitia/mock-kraken:${GORMUNGANDR_DOCKERTEST_TAG}
 
       - name: Prepare Go Env
         run: export GO111MODULE=on
