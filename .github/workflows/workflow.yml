@@ -5,6 +5,10 @@ on:
   push:
     branches:
       - master
+env:
+  GO111MODULE: on
+  GORMUNGANDR_DOCKERTEST_TAG: navitia_builder
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -24,10 +28,7 @@ jobs:
           sudo apt install libzmq3-dev
 
       - name: Retreive mock kraken
-        run: docker pull navitia/mock-kraken:dev
-
-      - name: Prepare Env
-        run: export GO111MODULE=on
+        run: docker pull navitia/mock-kraken:${GORMUNGANDR_DOCKERTEST_TAG}
 
       - name: Install all the build and lint dependencies
         run: make setup
