@@ -104,8 +104,8 @@ func (s *Serializer) NewDatetime(pb *pbnavitia.ScheduleStopTime) gonavitia.DateT
 	if pb.GetTime() == maxUInt64 {
 		//This is an "empty" datetime cell in the response
 		return gonavitia.DateTime{
-			AdditionalInfo: make([]string, 0),
-			Links:          make([]gonavitia.Link, 0),
+			AdditionalInfo: s.NewAdditionalInformation(pb.Properties.AdditionalInformations),
+			Links:          s.NewLinksFromProperties(pb.Properties),
 		}
 	}
 
@@ -114,7 +114,7 @@ func (s *Serializer) NewDatetime(pb *pbnavitia.ScheduleStopTime) gonavitia.DateT
 	return gonavitia.DateTime{
 		DateTime:       s.NewNavitiaDatetime(int64(pb.GetDate() + pb.GetTime())),
 		BaseDateTime:   &baseDateTime,
-		AdditionalInfo: make([]string, 0),
+		AdditionalInfo: s.NewAdditionalInformation(pb.Properties.AdditionalInformations),
 		DataFreshness:  &rtLevel,
 		Links:          s.NewLinksFromProperties(pb.Properties),
 	}
@@ -134,4 +134,13 @@ func (s *Serializer) NewLinksFromProperties(pb *pbnavitia.Properties) []gonaviti
 		})
 	}
 	return result
+}
+
+func (s *Serializer) NewAdditionalInformation(pb []pbnavitia.Properties_AdditionalInformation) []string {
+	infos := make([]string, 0, len(pb))
+	for _, v := range pb {
+		additionalInfo := strings.ToLower(v.Enum().String())
+		infos = append(infos, additionalInfo)
+	}
+	return infos
 }
