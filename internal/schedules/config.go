@@ -13,7 +13,6 @@ import (
 func init() {
 	pflag.String("listen", ":8080", "[IP]:PORT to listen")
 	pflag.Duration("timeout", time.Second, "timeout for call to kraken")
-	pflag.String("kraken", "tcp://localhost:3000", "zmq addr for kraken")
 	pflag.String("kraken-files-uri", "", "format: [scheme:][//[userinfo@]host][/]path")
 	pflag.String("pprof-listen", "", "address to listen for pprof. format: \"IP:PORT\"")
 	pflag.Lookup("pprof-listen").NoOptDefVal = "localhost:6060"
@@ -37,7 +36,6 @@ func init() {
 type Config struct { //nolint:maligned
 	Listen                  string
 	Timeout                 time.Duration
-	Kraken                  string
 	KrakenFilesUriStr       string `mapstructure:"kraken-files-uri"`
 	KrakenFilesUri          url.URL
 	PprofListen             string        `mapstructure:"pprof-listen"`

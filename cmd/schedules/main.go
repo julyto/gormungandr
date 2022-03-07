@@ -183,9 +183,6 @@ func main() {
 			krakens[coverage.Key] = kraken
 		}
 		schedules.SetupApiMultiCoverage(router, krakens, statPublisher, authOption)
-	} else if len(config.Kraken) > 0 {
-		kraken := kraken.NewKrakenZMQ("default", config.Kraken, config.Timeout)
-		schedules.SetupApi(router, kraken, statPublisher, authOption)
 	} else {
 		logger.Fatalf("No coverage defined")
 		os.Exit(1)
