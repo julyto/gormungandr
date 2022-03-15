@@ -60,7 +60,8 @@ func TestRouteSchedules(t *testing.T) {
 	assert := assert.New(t)
 	require := require.New(t)
 	c, engine := gin.CreateTestContext(httptest.NewRecorder())
-	SetupApi(engine, departureBoardTest, &NullPublisher{}, SkipAuth())
+	krakens := map[string]kraken.Kraken{"foo": departureBoardTest}
+	SetupApiMultiCoverage(engine, krakens, &NullPublisher{}, SkipAuth())
 
 	c.Request = httptest.NewRequest("GET", "http://api.navitia.io/v1/coverage/foo/routes/line:A:0/route_schedules?from_datetime=20120615T080000", nil)
 	w := httptest.NewRecorder()
@@ -125,7 +126,8 @@ func TestRouteSchedulesHeadsign(t *testing.T) {
 	assert := assert.New(t)
 	require := require.New(t)
 	c, engine := gin.CreateTestContext(httptest.NewRecorder())
-	SetupApi(engine, mainRoutingTest, &NullPublisher{}, SkipAuth())
+	krakens := map[string]kraken.Kraken{"foo": mainRoutingTest}
+	SetupApiMultiCoverage(engine, krakens, &NullPublisher{}, SkipAuth())
 
 	c.Request = httptest.NewRequest("GET", "/v1/coverage/foo/routes/A:0/route_schedules?from_datetime=20120615T000000", nil)
 	w := httptest.NewRecorder()
@@ -156,7 +158,8 @@ func TestRouteSchedulesDisruptions(t *testing.T) {
 	assert := assert.New(t)
 	require := require.New(t)
 	c, engine := gin.CreateTestContext(httptest.NewRecorder())
-	SetupApi(engine, mainRoutingTest, &NullPublisher{}, SkipAuth())
+	krakens := map[string]kraken.Kraken{"foo": mainRoutingTest}
+	SetupApiMultiCoverage(engine, krakens, &NullPublisher{}, SkipAuth())
 
 	c.Request = httptest.NewRequest("GET", "/v1/coverage/foo/lines/A/route_schedules?from_datetime=20120801T000000&_current_datetime=20120801T050000", nil)
 	w := httptest.NewRecorder()
