@@ -20,4 +20,5 @@ func (e *KrakenTimeout) Error() string {
 type Kraken interface {
 	// Send a generic request to kraken and return the response
 	Call(request *pbnavitia.Request) (*pbnavitia.Response, error)
+	UpdateKrakenZMQ(addr string)
 }

@@ -30,9 +30,15 @@ func NewKrakenZMQ(name, addr string, timeout time.Duration) Kraken {
 		socketPool: newPool(addr, 100),
 	}
 	var st gobreaker.Settings
-	st.Name = "Kraken"
+	st.Name = name
 	kraken.cb = gobreaker.NewCircuitBreaker(st)
 	return kraken
+}
+
+func (k *KrakenZMQ) UpdateKrakenZMQ(addr string) {
+	close(k.socketPool.pool)
+	k.socketPool = newPool(addr, 100)
+	k.Addr = addr
 }
 
 func (k *KrakenZMQ) call(request []byte) ([]byte, error) {
