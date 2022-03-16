@@ -17,6 +17,7 @@ import (
 	"github.com/CanalTP/gormungandr/internal/schedules"
 	"github.com/CanalTP/gormungandr/internal/utils"
 	"github.com/CanalTP/gormungandr/kraken"
+	"github.com/CanalTP/gormungandr/serializer"
 	cache "github.com/patrickmn/go-cache"
 	"github.com/rafaeljesus/rabbus"
 
@@ -29,6 +30,19 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/pflag"
 )
+
+type Instances struct {
+	server        *http.Server
+	authOption    schedules.AuthOption
+	statPublisher *auth.StatPublisher
+	config        schedules.Config
+	router        *gin.Engine
+	logger        *logrus.Entry
+	krakens       map[string]kraken.Kraken
+	confLoadAt    time.Time
+}
+
+var instances Instances
 
 func setupRouter(config schedules.Config) *gin.Engine {
 	r := gin.New()
@@ -57,6 +71,7 @@ func setupRouter(config schedules.Config) *gin.Engine {
 
 	r.GET("/", Index)
 	r.GET("/status", Status)
+	r.GET("/reload", Reload)
 
 	return r
 }
@@ -69,10 +84,50 @@ func Index(c *gin.Context) {
 }
 
 func Status(c *gin.Context) {
-	c.JSON(200, gin.H{
-		"status":  "ok",
-		"version": gormungandr.Version,
-		"runtime": runtime.Version(),
+	c.JSON(http.StatusOK, serializer.StatusResponse{
+		Status:     "ok",
+		Version:    gormungandr.Version,
+		Runtime:    runtime.Version(),
+		LoadConfAt: instances.confLoadAt,
+	})
+}
+
+func make_mapping() {
+	schedules.GetKrakenFilesUriStr(&instances.config)
+	instances.confLoadAt = time.Now().UTC()
+	if len(instances.config.KrakenFilesUriStr) > 0 {
+		coverages, err := utils.GetFileWithFS(instances.config.KrakenFilesUri)
+		if err != nil {
+			instances.logger.Fatalf("No coverages: %+v", err)
+			os.Exit(1)
+		}
+		new_kraken := make(map[string]kraken.Kraken)
+		for _, coverage := range coverages {
+			kk := instances.krakens[coverage.Key]
+			if kk == nil {
+				instances.krakens[coverage.Key] = kraken.NewKrakenZMQ(coverage.Key, coverage.ZmqSocket, instances.config.Timeout)
+				new_kraken[coverage.Key] = instances.krakens[coverage.Key]
+			} else {
+				kk.UpdateKrakenZMQ(coverage.ZmqSocket)
+			}
+		}
+		// Add new kraken
+		schedules.SetupApiMultiCoverage(instances.router, new_kraken, instances.statPublisher, instances.authOption)
+	} else {
+		instances.logger.Fatalf("No coverage defined")
+		os.Exit(1)
+	}
+}
+
+func Reload(c *gin.Context) {
+
+	make_mapping()
+
+	c.JSON(http.StatusOK, serializer.StatusResponse{
+		Status:     "ok",
+		Version:    gormungandr.Version,
+		Runtime:    runtime.Version(),
+		LoadConfAt: instances.confLoadAt,
 	})
 }
 
@@ -97,24 +152,24 @@ func main() {
 		os.Exit(0)
 	}
 
-	logger := logrus.WithFields(logrus.Fields{
+	instances.logger = logrus.WithFields(logrus.Fields{
 		"version": gormungandr.Version,
 		"runtime": runtime.Version(),
 	})
 	config, err := schedules.GetConfig()
 	if err != nil {
-		logger.Fatalf("failure to load configuration: %+v", err)
+		instances.logger.Fatalf("failure to load configuration: %+v", err)
 	}
 	initLog(config.JSONLog, config.LogLevel)
-	logger = logger.WithFields(logrus.Fields{
+	instances.logger = instances.logger.WithFields(logrus.Fields{
 		"config": config,
 	})
-	logger.Info("starting schedules")
+	instances.config = config
+	instances.logger.Info("starting schedules")
 
-	authOption := schedules.SkipAuth()
-	var statPublisher *auth.StatPublisher
+	instances.authOption = schedules.SkipAuth()
 
-	if !config.SkipAuth {
+	if !instances.config.SkipAuth {
 		//disable database if authentication isn't used
 		var (
 			db        *sql.DB
@@ -123,28 +178,28 @@ func main() {
 		db, err = sql.Open("postgresInstrumented", config.ConnectionString)
 		db.SetMaxOpenConns(config.MaxPostgresqlConnection)
 		if err != nil {
-			logger.Fatal("connection to postgres failed: ", err)
+			instances.logger.Fatal("connection to postgres failed: ", err)
 		}
 		err = db.Ping()
 		if err != nil {
-			logger.Fatal("connection to postgres failed: ", err)
+			instances.logger.Fatal("connection to postgres failed: ", err)
 		}
 		if config.AuthCacheTimeout.Seconds() > 0 {
-			logger.Info("Activate authentication cache")
+			instances.logger.Info("Activate authentication cache")
 			authCache = cache.New(config.AuthCacheTimeout, config.AuthCacheTimeout*2)
 		}
 
-		authOption = schedules.Auth(auth.AuthenticationMiddleware(db, authCache))
+		instances.authOption = schedules.Auth(auth.AuthenticationMiddleware(db, authCache))
 	}
 
-	if len(config.PprofListen) != 0 {
+	if len(instances.config.PprofListen) != 0 {
 		go func() {
-			logrus.Infof("pprof listening on %s", config.PprofListen)
-			logger.Error(http.ListenAndServe(config.PprofListen, nil))
+			logrus.Infof("pprof listening on %s", instances.config.PprofListen)
+			instances.logger.Error(http.ListenAndServe(instances.config.PprofListen, nil))
 		}()
 	}
 
-	if !config.SkipStats {
+	if !instances.config.SkipStats {
 		var rmq *rabbus.Rabbus
 		rmq, err = rabbus.New(
 			config.RabbitmqDsn,
@@ -168,34 +223,22 @@ func main() {
 				logrus.Errorf("rabbus.run ended with error: %+v", err)
 			}
 		}()
-		statPublisher = auth.NewStatPublisher(rmq, config.StatsExchange, 2*time.Second)
+		instances.statPublisher = auth.NewStatPublisher(rmq, instances.config.StatsExchange, 2*time.Second)
 	}
 
-	router := setupRouter(config)
-	if len(config.KrakenFilesUriStr) > 0 {
-		coverages, err := utils.GetFileWithFS(config.KrakenFilesUri)
-		if err != nil {
-			logger.Fatalf("No coverages: %+v", err)
-		}
-		krakens := make(map[string]kraken.Kraken)
-		for _, coverage := range coverages {
-			kraken := kraken.NewKrakenZMQ(coverage.Key, coverage.ZmqSocket, config.Timeout)
-			krakens[coverage.Key] = kraken
-		}
-		schedules.SetupApiMultiCoverage(router, krakens, statPublisher, authOption)
-	} else {
-		logger.Fatalf("No coverage defined")
-		os.Exit(1)
-	}
+	instances.router = setupRouter(instances.config)
+	instances.krakens = make(map[string]kraken.Kraken)
 
-	srv := &http.Server{
+	make_mapping()
+
+	instances.server = &http.Server{
 		Addr:    config.Listen,
-		Handler: router,
+		Handler: instances.router,
 	}
 	go func() {
 		// service connections
-		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			logger.Fatalf("listen: %s", err)
+		if err := instances.server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			instances.logger.Fatalf("listen: %s", err)
 		}
 	}()
 
@@ -208,7 +251,7 @@ func main() {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	if err := srv.Shutdown(ctx); err != nil {
+	if err := instances.server.Shutdown(ctx); err != nil {
 		logrus.Fatal("Server Shutdown:", err)
 	}
 	logrus.Info("Server exiting")
