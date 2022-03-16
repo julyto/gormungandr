@@ -104,8 +104,8 @@ func (s *Serializer) NewDatetime(pb *pbnavitia.ScheduleStopTime) gonavitia.DateT
 	if pb.GetTime() == maxUInt64 {
 		//This is an "empty" datetime cell in the response
 		return gonavitia.DateTime{
-			AdditionalInfo: s.NewAdditionalInformation(pb.Properties.AdditionalInformations),
-			Links:          s.NewLinksFromProperties(pb.Properties),
+			AdditionalInfo: make([]string, 0),
+			Links:          make([]gonavitia.Link, 0),
 		}
 	}
 
