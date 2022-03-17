@@ -71,5 +71,8 @@ func GetConfig() (Config, error) {
 	viper.AutomaticEnv()
 	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
 	err = viper.Unmarshal(&config)
+
+	GetKrakenFilesUriStr(&config)
+
 	return config, err
 }

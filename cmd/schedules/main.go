@@ -92,8 +92,10 @@ func Status(c *gin.Context) {
 	})
 }
 
-func make_mapping() {
-	schedules.GetKrakenFilesUriStr(&instances.config)
+func make_mapping(partialResetConf bool) {
+	if partialResetConf {
+		schedules.GetKrakenFilesUriStr(&instances.config)
+	}
 	instances.confLoadAt = time.Now().UTC()
 	if len(instances.config.KrakenFilesUriStr) > 0 {
 		coverages, err := utils.GetFileWithFS(instances.config.KrakenFilesUri)
@@ -121,7 +123,7 @@ func make_mapping() {
 
 func Reload(c *gin.Context) {
 
-	make_mapping()
+	make_mapping(true)
 
 	c.JSON(http.StatusOK, serializer.StatusResponse{
 		Status:     "ok",
@@ -229,12 +231,13 @@ func main() {
 	instances.router = setupRouter(instances.config)
 	instances.krakens = make(map[string]kraken.Kraken)
 
-	make_mapping()
+	make_mapping(false)
 
 	instances.server = &http.Server{
 		Addr:    config.Listen,
 		Handler: instances.router,
 	}
+
 	go func() {
 		// service connections
 		if err := instances.server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
