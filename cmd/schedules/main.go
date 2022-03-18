@@ -133,7 +133,7 @@ func Reload(c *gin.Context) {
 
 	err := make_mapping(true)
 	if err != nil {
-		instances.logger.Error("Error on reload coverages: %+v", err)
+		instances.logger.Errorf("Error on reload coverages: %+v", err)
 		instances.LoadConfStatus = "KO"
 	}
 
