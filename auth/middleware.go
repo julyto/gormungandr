@@ -43,7 +43,7 @@ func middleware(c *gin.Context, db *sql.DB, authCache *cache.Cache) {
 	token := getToken(c)
 	logger := logrus.WithFields(logrus.Fields{
 		"coverage": coverage,
-		"token":    token,
+		"token":    "######################",
 	})
 	logger.Debug("authentifying request")
 	if token == "" {
