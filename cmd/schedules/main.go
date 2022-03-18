@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
@@ -32,14 +33,15 @@ import (
 )
 
 type Instances struct {
-	server        *http.Server
-	authOption    schedules.AuthOption
-	statPublisher *auth.StatPublisher
-	config        schedules.Config
-	router        *gin.Engine
-	logger        *logrus.Entry
-	krakens       map[string]kraken.Kraken
-	confLoadAt    time.Time
+	server         *http.Server
+	authOption     schedules.AuthOption
+	statPublisher  *auth.StatPublisher
+	config         schedules.Config
+	router         *gin.Engine
+	logger         *logrus.Entry
+	krakens        map[string]kraken.Kraken
+	confLoadAt     time.Time
+	LoadConfStatus string
 }
 
 var instances Instances
@@ -85,23 +87,28 @@ func Index(c *gin.Context) {
 
 func Status(c *gin.Context) {
 	c.JSON(http.StatusOK, serializer.StatusResponse{
-		Status:     "ok",
-		Version:    gormungandr.Version,
-		Runtime:    runtime.Version(),
-		LoadConfAt: instances.confLoadAt,
+		Status:         "ok",
+		Version:        gormungandr.Version,
+		Runtime:        runtime.Version(),
+		LoadConfAt:     instances.confLoadAt,
+		LoadConfStatus: instances.LoadConfStatus,
 	})
 }
 
-func make_mapping(partialResetConf bool) {
+func make_mapping(partialResetConf bool) error {
 	if partialResetConf {
-		schedules.GetKrakenFilesUriStr(&instances.config)
+		err := schedules.GetKrakenFilesUriStr(&instances.config)
+		if err != nil {
+			instances.logger.Fatalf("No coverages: %+v", err)
+			return err
+		}
 	}
 	instances.confLoadAt = time.Now().UTC()
 	if len(instances.config.KrakenFilesUriStr) > 0 {
 		coverages, err := utils.GetFileWithFS(instances.config.KrakenFilesUri)
 		if err != nil {
 			instances.logger.Fatalf("No coverages: %+v", err)
-			os.Exit(1)
+			return err
 		}
 		new_kraken := make(map[string]kraken.Kraken)
 		for _, coverage := range coverages {
@@ -117,19 +124,25 @@ func make_mapping(partialResetConf bool) {
 		schedules.SetupApiMultiCoverage(instances.router, new_kraken, instances.statPublisher, instances.authOption)
 	} else {
 		instances.logger.Fatalf("No coverage defined")
-		os.Exit(1)
+		return errors.New("No coverage defined")
 	}
+	return nil
 }
 
 func Reload(c *gin.Context) {
 
-	make_mapping(true)
+	err := make_mapping(true)
+	if err != nil {
+		instances.logger.Error("Error on reload coverages: %+v", err)
+		instances.LoadConfStatus = "KO"
+	}
 
 	c.JSON(http.StatusOK, serializer.StatusResponse{
-		Status:     "ok",
-		Version:    gormungandr.Version,
-		Runtime:    runtime.Version(),
-		LoadConfAt: instances.confLoadAt,
+		Status:         "ok",
+		LoadConfStatus: instances.LoadConfStatus,
+		Version:        gormungandr.Version,
+		Runtime:        runtime.Version(),
+		LoadConfAt:     instances.confLoadAt,
 	})
 }
 
@@ -231,7 +244,11 @@ func main() {
 	instances.router = setupRouter(instances.config)
 	instances.krakens = make(map[string]kraken.Kraken)
 
-	make_mapping(false)
+	err = make_mapping(false)
+	if err != nil {
+		os.Exit(1)
+	}
+	instances.LoadConfStatus = "OK"
 
 	instances.server = &http.Server{
 		Addr:    config.Listen,

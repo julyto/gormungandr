@@ -52,11 +52,13 @@ type Config struct { //nolint:maligned
 	AuthCacheTimeout        time.Duration `mapstructure:"auth-cache-timeout"`
 }
 
-func GetKrakenFilesUriStr(config *Config) {
+func GetKrakenFilesUriStr(config *Config) error {
 	if url, err := url.Parse(config.KrakenFilesUriStr); err != nil {
 		logrus.Errorf("Unable to parse data url: %s", config.KrakenFilesUriStr)
+		return err
 	} else {
 		config.KrakenFilesUri = *url
+		return nil
 	}
 }
 
@@ -71,8 +73,10 @@ func GetConfig() (Config, error) {
 	viper.AutomaticEnv()
 	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
 	err = viper.Unmarshal(&config)
-
-	GetKrakenFilesUriStr(&config)
+	if err != nil {
+		return config, err
+	}
+	err = GetKrakenFilesUriStr(&config)
 
 	return config, err
 }
