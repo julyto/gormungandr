@@ -114,7 +114,7 @@ func (s *Serializer) NewDatetime(pb *pbnavitia.ScheduleStopTime) gonavitia.DateT
 	return gonavitia.DateTime{
 		DateTime:       s.NewNavitiaDatetime(int64(pb.GetDate() + pb.GetTime())),
 		BaseDateTime:   &baseDateTime,
-		AdditionalInfo: make([]string, 0),
+		AdditionalInfo: s.NewAdditionalInformation(pb.Properties.AdditionalInformations),
 		DataFreshness:  &rtLevel,
 		Links:          s.NewLinksFromProperties(pb.Properties),
 	}
@@ -134,4 +134,13 @@ func (s *Serializer) NewLinksFromProperties(pb *pbnavitia.Properties) []gonaviti
 		})
 	}
 	return result
+}
+
+func (s *Serializer) NewAdditionalInformation(pb []pbnavitia.Properties_AdditionalInformation) []string {
+	infos := make([]string, 0, len(pb))
+	for _, v := range pb {
+		additionalInfo := strings.ToLower(v.Enum().String())
+		infos = append(infos, additionalInfo)
+	}
+	return infos
 }

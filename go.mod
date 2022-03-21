@@ -21,7 +21,7 @@ require (
 	github.com/gin-gonic/contrib v0.0.0-20180320084256-9b830a15f6ab
 	github.com/gin-gonic/gin v0.0.0-20180329063307-6d913fc343cf
 	github.com/go-sql-driver/mysql v1.6.0 // indirect
-	github.com/golang/protobuf v1.3.2
+	github.com/golang/protobuf v1.5.2
 	github.com/google/go-cmp v0.5.6 // indirect
 	github.com/gotestyourself/gotestyourself v2.2.0+incompatible // indirect
 	github.com/hashicorp/hcl v0.0.0-20180404174102-ef8a98b0bbce // indirect
@@ -51,8 +51,9 @@ require (
 	github.com/streadway/amqp v0.0.0-20180315184602-8e4aba63da9f // indirect
 	github.com/stretchr/testify v1.3.0
 	github.com/ugorji/go v0.0.0-20180112141927-9831f2c3ac10 // indirect
-	golang.org/x/net v0.0.0-20210405180319-a5a99cb37ef4 // indirect
-	golang.org/x/sys v0.0.0-20210615035016-665e8c7367d1 // indirect
+	golang.org/x/net v0.0.0-20211015210444-4f30a5c0130f // indirect
+	golang.org/x/sys v0.0.0-20211205182925-97ca703d548d // indirect
+	golang.org/x/text v0.3.7 // indirect
 	gopkg.in/DATA-DOG/go-sqlmock.v1 v1.3.0
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
 	gopkg.in/go-playground/validator.v8 v8.18.2 // indirect
